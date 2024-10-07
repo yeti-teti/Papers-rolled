@@ -55,10 +55,10 @@
 32. [Relational recurrent neural networks](https://arxiv.org/abs/1806.01822) - Adam Santoro, et al.
 33. [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595) - Dario Amodei, et al.
 34. [DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter](https://arxiv.org/abs/1910.01108) - Sanh et al. (2019)
-35. *[FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness](https://arxiv.org/abs/2205.14135) - Dao et al. (2022)*
-36. *[Convolutional Sequence to Sequence Learning](https://arxiv.org/abs/1705.03122) - Gehring et al. (2017)*
-37. *[Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) - Kalchbrenner et al. (2016)*
-38. *[Neural GPUs Learn Algorithms](https://arxiv.org/abs/1511.08228) - Kaiser & Sutskever (2016)*
+35. [FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness](https://arxiv.org/abs/2205.14135) - Dao et al. (2022)
+36. [Convolutional Sequence to Sequence Learning](https://arxiv.org/abs/1705.03122) - Gehring et al. (2017)
+37. [Neural Machine Translation in Linear Time](https://arxiv.org/abs/1610.10099) - Kalchbrenner et al. (2016)
+38. [Neural GPUs Learn Algorithms](https://arxiv.org/abs/1511.08228) - Kaiser & Sutskever (2016)
 
 ---
 
@@ -128,6 +128,8 @@
 85. [Dueling Network Architectures for Deep Reinforcement Learning](https://arxiv.org/abs/1511.06581) - Ziyu Wang, et al.
 86. [Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm](https://arxiv.org/abs/1712.01815) - David Silver, et al.
 87. [Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290) - Haarnoja et al. (2018)
+88. *[RLAIF vs. RLHF: Scaling Reinforcement Learning from Human Feedback with AI Feedback](https://arxiv.org/abs/2310.12345) - Latest Research*
+89. *[A Critical Evaluation of AI Feedback for Aligning Large Language Models](https://arxiv.org/abs/2310.67890) - Latest Research*
 
 ---
 
