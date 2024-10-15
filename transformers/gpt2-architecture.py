@@ -219,6 +219,139 @@ class GPT(nn.Module):
 
 
 
+import tiktoken
+import numpy as np
 
+def load_tokens(filename):
+    npt = np.load(filename)
+    npt = npt.astype(np.int32)
+    ptt = torch.tensor(npt, dtype=torch.long)
+    return ptt 
+
+class DataLoaderLite:
+    def __init__(self, B, T, process_rank, num_processes, split):
+        self.B = B
+        self.T = T
+        self.process_rank = process_rank
+        self.num_processes = num_processes
+        assert split in {'train', 'val'}
+
+        data_root = "edu_fineweb10B"
+        shards = os.listdir(data_root)
+        shards = [s for s in shards if split in s]
+        shards = sorted(shards)
+        shards = [os.path.join(data)root, s) for s in shards]
+        self.shards = shards 
+        assert len(shards) > 0, f"no shards found for split {split}"
+        if master_process:
+            print(f"found {len(shards)} shards for split {split}")
+
+        self.reset()
+
+    def reset(self):
+        self.current_shard = 0
+        self.tokens = load_tokens(self.shards[self.current_shard])
+        self.current_position = self.B * self.T * self.process_rank
+
+    def next_batch(self):
+        B, T = self.B, self.T
+        buf = self.tokens[self.current_position : self.current_position+B*T+1]
+        x = (buf[:-1]).view(B, T)
+        y = (buf[1:]).view(B, T)
+
+        self.current_position += B * T * self.num_processes
+
+        if self.current_position + (B * T * self.num_processes + 1) > len(self.tokens):
+            self.current_shard = (self.current_shard + 1) % len(self.shards)
+            self.tokens = load_tokens(self.shards[self.current_shard])
+            self.current_position = B * T * self.process_rank
+
+        return x, y
+
+
+
+from torch.distributed import init_process_group, destroy_process_group
+from torch.nn.parallel import DistributedDataParallel as DDP 
+import torch.distributed as dist 
+
+ddp = int(os.environ.get('RANK', -1)) != -1
+if ddp:
+    assert torch.cuda.is_available(), "Cuda is needed for DDP "
+    init_process_group(backend='nccl')
+    ddp_rank = int(os.environ['RANK'])
+    ddp_local_rank = int(os.environ['LOCAL_RANK'])
+    ddp_world_size = int(os.environ['WORLD_SIZE'])
+    device = f'cuda:{ddp_local_rank}'
+    torch.cuda.set_device(device)
+    master_process = ddp_rank == 0 
+else:
+    ddp_rank = 0
+    ddp_local_rank = 0 
+    ddp_world_size = 1
+    master_process = True
+    device = "cpu"
+
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = "mps"
+    print(f"Using device: {device}")
+
+device_type = "cuda" if device.startswith("cuda") else "cpu"
+
+torch.manual_seed(1337)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(1337)
+
+enc = tiktoken.get_encoding("gpt2")
+
+total_batch_size = 524288
+B = 64 
+T = 1024 
+
+assert total_batch_size % (B * T * ddp_world_size) == 0, "Make sure this is divisible"
+grad_accum_steps = total_batch_size // (B * T * ddp_world_size)
+
+if master_process:
+    print(f"Total desired batch size: {total_batch_size}")
+    print(f"=> Calculated gradient accumulation steps: {grad_accum_steps}")
+
+
+train_loader = DataLoaderLite(B=B, T=T, process_rank=ddp_rank, num_processes=ddp_world_size, split="train")
+val_loader = DataLoaderLite(B=B, T=T, process_rank=ddp_rank, num_processes=ddp_world_size, split="val")
+
+torch.set_float32_matmul_precision('high')
+
+
+model = GPT(GPTConfig(vocab_size=50304))
+model.to(device)
+
+use_compile = False
+if use_compile:
+    model = torch.compile(model)
+if ddp: 
+    model = DDP(model, device_idx=[ddp_local_rank])
+
+raw_model = model.module if ddp else model
+
+max_lr = 6e-4 
+min_lr = max_lr * 0.1 
+warmup_steps = 715
+max_steps = 19073 
+def get_lr(it):
+
+    if it < warmup_steps:
+        return max_lr * (it+1) / warmup_steps
+    
+    if it > max_steps:
+        return min_lr
+    
+    decay_ratio = (it - warmup_steps) / (max_steps - warmup_steps)
+    assert 0 <= decay_ratio <= 1
+    coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio))
+    return min_lr + coeff * (max_lr - min_lr)
+
+
+optimizer = raw_model.configure_optimizers(weight_decay=0.1, learning_rate=6e-4, device_type=device_type)
 
 
