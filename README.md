@@ -150,3 +150,9 @@
 109. [The First Law of Complexodynamics](https://www.scottaaronson.com/papers/cl.pdf) - Scott Aaronson
 110. [Quantifying the Rise and Fall of Complexity in Closed Systems: The Coffee Automaton](https://www.scottaaronson.com/papers/coffee.pdf) - Scott Aaronson, et al.
 111. [CS231n: Convolutional Neural Networks for Visual Recognition](http://cs231n.stanford.edu/)
+
+## Security 
+112. [Privacy Preserving Machine Learning: Threats and Solutions](https://arxiv.org/pdf/1804.11238)
+113. [SoK: Security and Privacy in Machine Learning](https://ieeexplore.ieee.org/document/8406613)
+114. [Differential Privacy in Deep Learning: An Overview](https://ieeexplore.ieee.org/document/9044259)
+
